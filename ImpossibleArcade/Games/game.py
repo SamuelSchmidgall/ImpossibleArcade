@@ -17,7 +17,7 @@ class Game(ABC):
           referencing the game screen dimensionality for graphics purposes
         """
         self.game_id = game_id  # string reference to game
-        self.screen_dimension = screen_dimension  # pixel-wise dimensionality of game
+        self.screen_dimension = screen_dimension  # representation-wise dimensionality of game
 
     @abstractmethod
     def update(self, action):
@@ -33,6 +33,22 @@ class Game(ABC):
         """
         Render game information on to screen
         :param screen: (pygame.screen) -> pygame screen to render on to
+        :return: None
+        """
+        pass
+
+    @abstractmethod
+    def game_reset(self):
+        """
+        Reset the current game, but not entire system (e.g. if new pac-man level reset board)
+        :return: None
+        """
+        pass
+
+    @abstractmethod
+    def machine_reset(self):
+        """
+        Reset the game conditions to original state
         :return: None
         """
         pass
