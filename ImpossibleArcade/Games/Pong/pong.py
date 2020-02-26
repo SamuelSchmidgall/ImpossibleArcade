@@ -3,6 +3,7 @@ import numpy as np
 from copy import deepcopy
 from ImpossibleArcade.Games.game import Game
 
+
 class Pong(Game):
     def __init__(self):
         """
@@ -97,14 +98,55 @@ class Pong(Game):
         self._paddle_data["paddle_velocity"] = 3
         self._paddle_data["paddle_actions"] = {0: "up", 1: "down", 2: "stay"}
 
-    def train_policy(self, soft_actor_critic):
+    def gym_wrapper(pong_class):
         """
-        Train a reinforcement policy using self-play
-        :param soft_actor_critic: (SoftActorCritic) ->
-          Soft Actor Critic architecture to train policy on
-        :return: (SoftActorCritic) -> trained policy
+        Generate gym wrapper for use in reinforcement learning
+        :return: (PongGym) pong gym wrapper
         """
-        pass
+        class PongGym:
+            def __init__(self):
+                """
+                Initalization for PongGym class
+                """
+                self._internal_pong = pong_class
+
+            def step(self, action):
+                """
+                Step environment taking in actions for both paddles
+                :param action: tuple(ndarray, ndarray) -> actions for both paddle players
+                :return: tuple(tuple(ndarray, ndarray),
+                  tuple(float, float), bool, dict) -> RL gym environment training information
+                """
+                reward = 0, 0
+                self._internal_pong._update_AI_interaction(action[0])
+                self._internal_pong._update_user_interaction(action[1])
+                game_over = self._internal_pong._update_ball()
+                if self._internal_pong.score["AI"] == 1:
+                    reward = reward[0], 1
+                elif self._internal_pong.score["Player"] == 1:
+                    reward = 1, reward[1]
+
+                return (self._get_obs(1), self._get_obs(2)), reward, game_over, dict()
+
+            def _get_obs(self, paddle=1):
+                """
+                Return environment observation for respective paddle
+                :param paddle: (int) paddle ID to gather obs for
+                :return: (ndarray) numpy array state observation
+                """
+                return np.array([self._internal_pong._ball_velocity,
+                        self._internal_pong._ball_position[0],
+                        self._internal_pong._ball_position[1],
+                        self._internal_pong._paddle_data["p2_center"]
+                        if paddle == 2 else self._internal_pong._paddle_data["p1_center"]])
+
+            def reset(self):
+                """
+                Reset internal pong environment
+                """
+                self._internal_pong.machine_reset()
+
+        return PongGym()
 
     def _initialize_board(self):
         """
@@ -212,6 +254,29 @@ class Pong(Game):
         elif action[0] == 1:
             self._paddle_data["p1_center"] = \
                 min(max(self._paddle_data["p1_center"] -
+                self._paddle_data["paddle_velocity"], 6), 93)
+
+        # paddle stay action
+        elif action[0] == 2:
+            pass  # do nothing
+
+    def _update_AI_interaction(self, action):
+        """
+        Update paddle data based on AI interaction
+        :param action: (ndarray) -> numpy array referencing player action
+          here, the actions 0, 1, 2 refer to paddle velocity commands
+        :return: None
+        """
+        # paddle up action
+        if action[0] == 0:
+            self._paddle_data["p2_center"] = \
+                min(max(self._paddle_data["p2_center"] +
+                self._paddle_data["paddle_velocity"], 6), 93)
+
+        # paddle down action
+        elif action[0] == 1:
+            self._paddle_data["p2_center"] = \
+                min(max(self._paddle_data["p2_center"] -
                 self._paddle_data["paddle_velocity"], 6), 93)
 
         # paddle stay action

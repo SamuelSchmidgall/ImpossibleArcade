@@ -10,6 +10,6 @@ setup(name='ImpossibleArcade',
       packages=['impossible_arcade'],
       install_requires=[
           "numpy",
-          "pygame",
+          "pygame", 'torch'
       ],
       zip_safe=False)

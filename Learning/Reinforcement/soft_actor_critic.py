@@ -1,8 +1,8 @@
 import torch
 from torch.optim import Adam
 import torch.nn.functional as F
+from Learning.Networks.networks_pytorch import QNetwork, PongNetwork
 from Learning.Networks.utils import soft_update, hard_update, ReplayMemory
-from Learning.Networks.networks_pytorch import QNetwork, SpinalNetworkH1Motor
 
 
 class SAC(object):
@@ -97,7 +97,7 @@ class SAC(object):
         return qf1_loss.item(), qf2_loss.item(), policy_loss.item(), alpha_loss.item(), alpha_tlogs.item()
 
 
-sac_hyperparams = {
+recommended_sac_hyperparams = {
     "seed":1,
     "lr": 0.0003,
     "tau": 0.005,
@@ -114,9 +114,7 @@ sac_hyperparams = {
 
 
 
-def train_sac():
-    import gym
-    env = gym.make("HalfCheetahHier-v2")
+def train_sac(sac_hyperparams, env):
     agent = SAC(env.observation_space.shape[0],
         env.action_space.shape[0], sac_hyperparams, env.action_space)
 
@@ -171,14 +169,13 @@ def train_sac():
         rewards_l.append(episode_reward)
 
         import pickle
-        with open("model_dump.pkl", "wb") as f:
+        with open("assets/model_dump.pkl", "wb") as f:
             pickle.dump(agent, f)
 
-        with open("reward_dump.pkl", "wb") as f:
+        with open("assets/reward_dump.pkl", "wb") as f:
             pickle.dump(rewards_l, f)
 
 
-#train_sac()
 
 
 
