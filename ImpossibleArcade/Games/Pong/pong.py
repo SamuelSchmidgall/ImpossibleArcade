@@ -11,6 +11,8 @@ class Pong(Game):
         super().__init__(game_id="pong", screen_dimension=(300, 100))
         # initialize empty score tuple
         self.score = None
+        # initialize pygame fonts
+        pygame.font.init()
         # initialize empty pong grid
         self._pong_grid = None
         # initialize empty ball velocity vector
@@ -68,6 +70,9 @@ class Pong(Game):
         # render grid on to screen
         self._draw_grid(screen, self._pong_grid)
 
+        # render score on to board
+        self._draw_score(screen)
+
     def game_reset(self):
         """
         Reset the current game, but not entire system
@@ -91,6 +96,15 @@ class Pong(Game):
         # initialize default paddle information
         self._paddle_data["paddle_velocity"] = 3
         self._paddle_data["paddle_actions"] = {0: "up", 1: "down", 2: "stay"}
+
+    def train_policy(self, soft_actor_critic):
+        """
+        Train a reinforcement policy using self-play
+        :param soft_actor_critic: (SoftActorCritic) ->
+          Soft Actor Critic architecture to train policy on
+        :return: (SoftActorCritic) -> trained policy
+        """
+        pass
 
     def _initialize_board(self):
         """
@@ -159,7 +173,7 @@ class Pong(Game):
             #self._ball_position = (300 - self._paddle_data["p_width"] - 1, self._ball_position[1])
         # ball went past paddle 1, p2 score
         elif pos[1] >= 300 - 3:
-            self.score["Player"] += 1
+            self.score["AI"] += 1
             return True
         # ball hit paddle 2
         elif pos[1] <= 6 and abs(pos[0] - self._paddle_data["p1_center"]) <= 6:
@@ -167,7 +181,7 @@ class Pong(Game):
             self._ball_position = (self._ball_position[0]+1, self._ball_position[1])
         # ball went past paddle 2, p1 score
         elif pos[1] <= 3:
-            self.score["AI"] += 1
+            self.score["Player"] += 1
             return True
 
         # ball hits bottom
@@ -253,7 +267,11 @@ class Pong(Game):
                 pygame.draw.rect(screen, _grid_color,
                     [_tl_corner[1], _tl_corner[0], self.grid_size, self.grid_size])
 
-
+    def _draw_score(self, screen):
+        text = "{} | {}".format(self.score["Player"], self.score["AI"])
+        font = pygame.font.Font(pygame.font.get_default_font(), 30)
+        text = font.render(text, True, (255, 255, 255))
+        screen.blit(text, (750, 30))
 
 
 
