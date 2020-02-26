@@ -6,7 +6,7 @@ class Pong(Game):
         """
         Initialization of Pong game, a subclass of Game
         """
-        super(Game, self).__init__(game_id="pong", screen_dimension=(300, 100))
+        super().__init__(game_id="pong", screen_dimension=(300, 100))
         # initialize empty score tuple
         self.score = None
         # initialize empty pong grid
@@ -115,7 +115,21 @@ class Pong(Game):
         Return an action command from corresponding game AI
         :return: (ndarray) -> velocity command given from game AI
         """
-        pass
+        action = [2]
+
+        # paddle up action
+        if action[0] == 0:
+            self._paddle_data["p2_center"] = min(max(
+                self._paddle_data["p2_center"] + self._paddle_data["paddle_velocity"], 5), 145)
+
+        # paddle down action
+        elif action[0] == 1:
+            self._paddle_data["p2_center"] = min(max(
+                self._paddle_data["p2_center"] - self._paddle_data["paddle_velocity"], 5), 145)
+
+        # paddle stay action
+        elif action[0] == 2:
+            pass  # do nothing
 
     def _update_ball(self):
         """
@@ -184,20 +198,22 @@ class Pong(Game):
         :param paddle_id: (int) paddle identification number
         :return: None
         """
-        for _i in range(self._paddle_data["p_depth"]):
-            for _j in range(self._paddle_data["p_width"]):
-                # compute paddle 1 cell x and y, fill board location with paddle cell
-                p1_cell_x = self._paddle_data["p_depth"] + _i + self._paddle_data["p{}_center".format(paddle_id)]
-                p1_cell_y = self._paddle_data["p_width"] + _j
-                self._pong_grid[p1_cell_x][p1_cell_y] = "P"
+        pass
+        #for _i in range(self._paddle_data["p_depth"]):
+        #    for _j in range(self._paddle_data["p_width"]):
+        #        # compute paddle 1 cell x and y, fill board location with paddle cell
+        #        p1_cell_x = self._paddle_data["p_depth"] + _i + self._paddle_data["p{}_center".format(paddle_id)]
+        #        p1_cell_y = self._paddle_data["p_width"] + _j
+        #        self._pong_grid[p1_cell_x][p1_cell_y] = "P"
 
     def _reposition_ball(self):
         """
         Reposition ball on to pong grid
         :return: None
         """
-        ball_pos = self._ball_position
-        self._pong_grid[ball_pos[0]][ball_pos[1]] = "B"
+        pass
+        #ball_pos = self._ball_position
+        #self._pong_grid[ball_pos[0]][ball_pos[1]] = "B"
 
     def _draw_grid(self, screen, board):
         """
@@ -206,7 +222,8 @@ class Pong(Game):
         :param board: (list(list(str))) -> list of board values
         :return: None
         """
-        pass
+        # fill screen black
+        screen.fill((255, 255, 255))
 
 
 
