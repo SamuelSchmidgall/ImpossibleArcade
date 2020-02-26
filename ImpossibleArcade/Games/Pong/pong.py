@@ -1,4 +1,6 @@
+import pygame
 import numpy as np
+from copy import deepcopy
 from ImpossibleArcade.Games.game import Game
 
 class Pong(Game):
@@ -17,7 +19,7 @@ class Pong(Game):
         self._ball_position = None
         # designated RGB color scheme for grid types
         self.colors = {
-            "E": (0, 0, 0), "P": (0, 0, 0), "B": (0, 0, 0)}
+            "E": (0, 0, 0), "P": (255, 255, 255), "B": (255, 255, 255)}
 
         # paddle metadata dictionary
         self._paddle_data = dict()
@@ -53,13 +55,16 @@ class Pong(Game):
         :return: None
         """
         # reset board to empty grid
-        self._pong_grid = self._empty_board
+        self._pong_grid \
+            = deepcopy(self._empty_board)
+
         # reposition paddle 1
         self._reposition_paddle(1)
         # reposition paddle 2
         self._reposition_paddle(2)
         # reposition ball
         self._reposition_ball()
+
         # render grid on to screen
         self._draw_grid(screen, self._pong_grid)
 
@@ -79,8 +84,9 @@ class Pong(Game):
         Reset the game conditions to original state
         :return: None
         """
+        # perform game and score reset
         self.game_reset()
-        self.score = {"AI": 0, "player": 0}
+        self.score = {"AI": 0, "Player": 0}
 
         # initialize default paddle information
         self._paddle_data["paddle_velocity"] = 3
@@ -92,13 +98,13 @@ class Pong(Game):
         :return: None
         """
         # initialize paddle data
-        self._paddle_data["p_depth"] = 10
-        self._paddle_data["p_width"] = 4
+        self._paddle_data["p_depth"] = 1
+        self._paddle_data["p_width"] = 10
 
         # initialize paddle 1 position
-        self._paddle_data["p1_center"] = 150
+        self._paddle_data["p1_center"] = 50
         # initialize paddle 2 position
-        self._paddle_data["p2_center"] = 150
+        self._paddle_data["p2_center"] = 50
 
     def _reset_ball(self):
         """
@@ -108,24 +114,26 @@ class Pong(Game):
         x_vel = np.random.choice([-1, 1])
         y_vel = np.random.choice([-2, 2])
 
-        return (x_vel, y_vel), (150, 50)
+        return (x_vel, y_vel), (50, 150)
 
     def _update_AI(self):
         """
         Return an action command from corresponding game AI
         :return: (ndarray) -> velocity command given from game AI
         """
-        action = [2]
+        action = [1]
 
         # paddle up action
         if action[0] == 0:
-            self._paddle_data["p2_center"] = min(max(
-                self._paddle_data["p2_center"] + self._paddle_data["paddle_velocity"], 5), 145)
+            self._paddle_data["p2_center"] = \
+                min(max(self._paddle_data["p2_center"]
+                + self._paddle_data["paddle_velocity"], 6), 93)
 
         # paddle down action
         elif action[0] == 1:
-            self._paddle_data["p2_center"] = min(max(
-                self._paddle_data["p2_center"] - self._paddle_data["paddle_velocity"], 5), 145)
+            self._paddle_data["p2_center"] =\
+                min(max(self._paddle_data["p2_center"]
+                - self._paddle_data["paddle_velocity"], 6), 93)
 
         # paddle stay action
         elif action[0] == 2:
@@ -136,38 +144,40 @@ class Pong(Game):
         Update the ball position based on its velocity
         :return: (bool) -> whether game reached termination state
         """
-        # updated ball position base don velocity
-        pos = self._ball_position[0] + self._ball_velocity[0],\
-              self._ball_position[1] + self._ball_velocity[1]
+        # updated ball position based on velocity
+        self._ball_position = (
+            self._ball_position[0] + self._ball_velocity[0],
+            self._ball_position[1] + self._ball_velocity[1])
+
+        pos = self._ball_position
 
         # check paddle collision
         # ball hit paddle 1
-        if pos[0] >= 300 - self._paddle_data["p_width"] \
-            and abs(pos[0] - self._paddle_data["p1_center"]) < self._paddle_data["p_height"]:
-            self._ball_velocity[0] = -2
-            self._ball_position[0] = 300 - self._paddle_data["p_width"] - 1
+        if pos[1] >= 300 - 6 and abs(pos[0] - self._paddle_data["p2_center"]) <= 6:
+            self._ball_velocity = (self._ball_velocity[0], -2)
+            self._ball_position = (self._ball_position[0]-1, self._ball_position[1])
+            #self._ball_position = (300 - self._paddle_data["p_width"] - 1, self._ball_position[1])
         # ball went past paddle 1, p2 score
-        elif pos[0] >= 300 - self._paddle_data["p_width"]:
+        elif pos[1] >= 300 - 3:
             self.score["Player"] += 1
             return True
         # ball hit paddle 2
-        elif pos[0] <= self._paddle_data["p_width"] \
-            and abs(pos[0] - self._paddle_data["p2_center"]) < self._paddle_data["p_height"]:
-            self._ball_velocity[0] = 2
-            self._ball_position[0] = self._paddle_data["p_width"] + 1
+        elif pos[1] <= 6 and abs(pos[0] - self._paddle_data["p1_center"]) <= 6:
+            self._ball_velocity = (self._ball_velocity[0], 2)
+            self._ball_position = (self._ball_position[0]+1, self._ball_position[1])
         # ball went past paddle 2, p1 score
-        elif pos[0] <= self._paddle_data["p_width"]:
+        elif pos[1] <= 3:
             self.score["AI"] += 1
             return True
 
         # ball hits bottom
-        if pos[1] >= 150:
-            self._ball_velocity[1] = -1
-            self._ball_position[1] = 149
+        if pos[0] >= 98:
+            self._ball_velocity = (-1, self._ball_velocity[1])
+            self._ball_position = (97, self._ball_position[1])
         # ball hits top
-        elif pos[1] < 0:
-            self._ball_velocity[1] = 1
-            self._ball_position[1] = 0
+        elif pos[0] <= 1:
+            self._ball_velocity = (1, self._ball_velocity[1])
+            self._ball_position = (2, self._ball_position[1])
 
         return False
 
@@ -180,13 +190,15 @@ class Pong(Game):
         """
         # paddle up action
         if action[0] == 0:
-            self._paddle_data["p1_center"] = min(max(
-                self._paddle_data["p1_center"] + self._paddle_data["paddle_velocity"], 5), 145)
+            self._paddle_data["p1_center"] = \
+                min(max(self._paddle_data["p1_center"] +
+                self._paddle_data["paddle_velocity"], 6), 93)
 
         # paddle down action
         elif action[0] == 1:
-            self._paddle_data["p1_center"] = min(max(
-                self._paddle_data["p1_center"] - self._paddle_data["paddle_velocity"], 5), 145)
+            self._paddle_data["p1_center"] = \
+                min(max(self._paddle_data["p1_center"] -
+                self._paddle_data["paddle_velocity"], 6), 93)
 
         # paddle stay action
         elif action[0] == 2:
@@ -198,22 +210,27 @@ class Pong(Game):
         :param paddle_id: (int) paddle identification number
         :return: None
         """
-        pass
-        #for _i in range(self._paddle_data["p_depth"]):
-        #    for _j in range(self._paddle_data["p_width"]):
-        #        # compute paddle 1 cell x and y, fill board location with paddle cell
-        #        p1_cell_x = self._paddle_data["p_depth"] + _i + self._paddle_data["p{}_center".format(paddle_id)]
-        #        p1_cell_y = self._paddle_data["p_width"] + _j
-        #        self._pong_grid[p1_cell_x][p1_cell_y] = "P"
+        # iterate through depth and width to update color grid
+        for _i in range(self._paddle_data["p_depth"]):
+            for _j in range(self._paddle_data["p_width"]//2):
+                # compute paddle 1 cell x and y, fill board location with paddle cell
+                p_cell_x = _j + self._paddle_data["p{}_center".format(paddle_id)]
+                p_cell_y = _i + 5 if paddle_id == 1 else 294
+                self._pong_grid[p_cell_x][p_cell_y] = "P"
+            for _j in range(self._paddle_data["p_width"]//2):
+                # compute paddle 1 cell x and y, fill board location with paddle cell
+                p_cell_x = -1*_j + \
+                    self._paddle_data["p{}_center".format(paddle_id)]
+                p_cell_y = _i + 5 if paddle_id == 1 else 294
+                self._pong_grid[p_cell_x][p_cell_y] = "P"
 
     def _reposition_ball(self):
         """
         Reposition ball on to pong grid
         :return: None
         """
-        pass
-        #ball_pos = self._ball_position
-        #self._pong_grid[ball_pos[0]][ball_pos[1]] = "B"
+        ball_pos = self._ball_position
+        self._pong_grid[ball_pos[0]][ball_pos[1]] = "B"
 
     def _draw_grid(self, screen, board):
         """
@@ -222,8 +239,19 @@ class Pong(Game):
         :param board: (list(list(str))) -> list of board values
         :return: None
         """
+        #import time
+        #time.sleep(1)
         # fill screen black
-        screen.fill((255, 255, 255))
+        screen.fill((0, 0, 0))
+        for _i in range(len(board)):
+            for _j in range(len(board[_i])):
+                # integrate color for cell type
+                _grid_color = self.colors[board[_i][_j]]
+                # compute top left corner
+                _tl_corner = _i*self.grid_size, _j*self.grid_size
+                # render rectangle
+                pygame.draw.rect(screen, _grid_color,
+                    [_tl_corner[1], _tl_corner[0], self.grid_size, self.grid_size])
 
 
 

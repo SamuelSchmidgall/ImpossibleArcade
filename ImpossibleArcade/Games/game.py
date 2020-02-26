@@ -16,6 +16,7 @@ class Game(ABC):
         :param screen_dimension: tuple(int, int) -> (heigh, width) integer tuple,
           referencing the game screen dimensionality for graphics purposes
         """
+        self.grid_size = 5
         self.game_id = game_id  # string reference to game
         self.screen_dimension = screen_dimension  # representation-wise dimensionality of game
 
