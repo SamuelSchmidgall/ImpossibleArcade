@@ -3,7 +3,9 @@ from ImpossibleArcade.Games.Pong.pong import Pong
 
 pong = Pong()
 width, height = pong.screen_dimension
-screen = pygame.display.set_mode((width*pong.grid_size, height*pong.grid_size))
+screen = pygame.display.set_mode(
+    (width*pong.grid_size, height*pong.grid_size))
+
 k_s, k_w = False, False
 while True:
     k_s, k_w = False, False

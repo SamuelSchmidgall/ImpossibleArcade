@@ -23,7 +23,8 @@ class Pong(Game):
         # designated RGB color scheme for grid types
         self.colors = {
             "E": (0, 0, 0), "P": (255, 255, 255), "B": (255, 255, 255)}
-
+        # type of AI to play
+        self.AI_type = "pd_controller"
         # paddle metadata dictionary
         self._paddle_data = dict()
         # generate the initial empty board for reference
@@ -178,9 +179,12 @@ class Pong(Game):
         :return: (ndarray) -> velocity command given from game AI
         """
         action = [1]
+        if self.AI_type == "pd_controller":
+            paddle_pos = self._ball_position[0] - self._paddle_data["p2_center"]
+            action = [2] if abs(paddle_pos) < 0.5 else [-paddle_pos/abs(paddle_pos)]
 
         # paddle up action
-        if action[0] == 0:
+        if action[0] == -1:
             self._paddle_data["p2_center"] = \
                 min(max(self._paddle_data["p2_center"]
                 + self._paddle_data["paddle_velocity"], 6), 93)
